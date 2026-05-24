@@ -23,3 +23,4 @@ eliminar(X, [X|T], T).
 eliminar(X, [C|T], [C|R]) :-
     X \= C,
     eliminar(X, T, R).
+

@@ -125,22 +125,18 @@ usar(Objeto) :-
 
 puedo_ir(Hacia) :-
     jugador(Actual),
-
     conexion(Actual, Hacia),
-
     visita_requerida(Hacia),
-
     (
         necesita(Hacia, Objeto)
         ->
         (
             usado(Usados),
             member(Objeto, Usados)
-        )
+        ) 
         ;
         true
     ),
-
     write('Puedes avanzar hacia '),
     write(Hacia),
     nl.
@@ -152,27 +148,112 @@ puedo_ir(Hacia) :-
     nl,
     fail.
 
- /***************
- *   mover   *
- ****************/
+ /****************
+ *     mover     *
+ *****************/
 % Mueve al jugador de un sitio a otro
 % Restriccion: Debe actualizar: ubicación actual, historial de modulos visitados.
 % Restriccion: Debe validar todas las condiciones definidas en puedo_ir
+
+mover(Lugar) :-
+    jugador(Actual),
+    conexion(Actual, Lugar),
+    visita_requerida(Lugar),
+    (
+        lugar_bloqueado(Lugar)
+        ->
+        (
+            write('El lugar esta bloqueado.'),
+            nl,
+            fail
+        )
+        ;
+        true
+    ),
+    retractall(jugador(_)),
+    assertz(jugador(Lugar)),
+    lugares(LugaresVisitados),
+    (
+        member(Lugar, LugaresVisitados)
+        ->
+        true
+        ;
+        (
+            retract(lugares(LugaresVisitados)),
+            assertz(lugares([Lugar|LugaresVisitados]))
+        )
+    ),
+    write('Te moviste en camino hacia '),
+    write(Lugar),
+    nl.
+
+
+mover(Lugar) :-
+    write('El camino hacia'),
+    write(Lugar),
+    write( 'esta bloqueaado'),
+    nl,
+    fail.
 
  /***************
  *  donde_esta   *
  ****************/
 % Indica la ubicacion de un artefacto
 
+donde_esta(Objeto) :-
+    artefactosLogrados(Inventario),
+    member(Objeto, Inventario),
+    write('Encuentras el artefacto'),
+    write(Objeto)
+    write(' en tu inventario.'),
+    nl.
+
+
+donde_esta(Objeto) :-
+    artefacto(Objeto, Lugar),
+    write('El artefacto '),
+    write(Objeto),
+    write(' esta en '),
+    write(Lugar),
+    nl.
+
+
+donde_esta(_) :-
+    write('Objeto no identificado.'),
+    nl.
+
+que_tengo :-
+    artefactosLogrados(Inventario),
+    write('Encuentras en tu inventario los artefactos:'),
+    nl,
+    leer_(Inventario).
+
  /************************
  *   modulos_visitados   *
  ************************/
 % Indica modulos previos visitados por el jugador
 
+modulos_visitados :-
+    lugares(LugaresVisitados),
+    write('Lugares visitados:'),
+    nl,
+    leer_(LugaresVisitados).
+
  /***********
  *   ruta   *
  ************/
-% Indica todas una posible ruta dado un punto y otro 
+% Indica una posible ruta dado un punto y otro 
+
+ruta(Inicio, Fin, Camino) :-
+    subRutas(Inicio, Fin, [Inicio], Camino).
+
+subRutas(Fin, Fin, Camino, Camino).
+
+subRutas(Inicio, Fin, Visitados, Camino) :-
+    conexion(Inicio, Siguiente),
+    \+ member(Siguiente, Visitados),
+    append(Visitados, [Siguiente], NuevosVisitados),
+    subRutas(Siguiente, Fin, NuevosVisitados, Camino).
 
  /**************
  *  como_gano  *
