@@ -1,6 +1,9 @@
-:- module(hechos, [jugador/1, artefactosLogrados/1, modulo/2, artefacto/2, enlace/2, necesita/2, pasoPrevio/2]).
+:- module(hechos, [ jugador/1, artefactosLogrados/1, modulo/2, artefacto/2, enlace/2,necesita/2, necesitaEstado/3, pasoPrevio/2, sistema/4, tripulante/4, objetivoS/2, objetivoT/2]).
+
 :- dynamic jugador/1.
 :- dynamic artefactosLogrados/1.
+:- dynamic sistema/4.
+:- dynamic tripulante/4.
 
 % Ejemplo de hechos
 % Modulos
