@@ -1,22 +1,16 @@
 :- use_module('hechos.pl').
 :- use_module('auxiliares.pl').
 
+% Registrar el punto de partida del jugador
 
-% Construir conexiones logicas del mapa
+punto_inicio :-
+    jugador(Lugar),
+    retractall(lugares(_)),
+    assertz(lugares([lugar])),
+    !.
+punto_inicio.
 
-construir_mapa(Inicio, Mapa) :-
-    construir_mapa(Inicio, [], Mapa).
-
-construir_mapa(Punto, Visitados, mapa(Punto, SubCaminos)) :-
-    findall(
-        Subcamino,
-        (
-            conexion(Punto, Siguiente),
-            \+ member(Siguiente, Visitados),
-            construir_mapa(Siguiente, [Punto|Visitados], Subcamino)
-        ),
-        SubCaminos
-    ).
+:- initialization(punto_inicio, now).
 
 % Mostrar lugares del mapa
 
@@ -189,13 +183,7 @@ puedo_ir(Hacia) :-
     visita_requerida(Hacia),
     (
         necesita(Hacia, Objeto)
-        ->
-        (
-            usado(Usados),
-            member(Objeto, Usados)
-        )
-        ;
-        true
+        -> (usado(Usados), member(Objeto, Usados)) ; true
     ),
     (
         necesitaEstado(Hacia, Servicio, EstadoNecesario)
@@ -204,9 +192,8 @@ puedo_ir(Hacia) :-
             reparados(Registro),
             sistema(_, Servicio, _, EstadoNecesario),
             member(Servicio, Registro)
-        )
-        ;
-        true
+        ) 
+        ; true
     ),
     write('Puedes avanzar hacia '),
     write(Hacia),

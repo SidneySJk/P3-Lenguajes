@@ -1,5 +1,4 @@
 :- module(auxiliares, [usado/1, lugares/1, rescatados/1, reparados/1, leer_/1, coincidencias/2, eliminar/3]).
-
 :- dynamic usado/1.
 :- dynamic lugares/1.
 :- dynamic rescatados/1.
@@ -8,7 +7,7 @@
 
 % Estado auxiliares
 usado([]).
-lugares([puente_mando]).
+lugares([]).
 rescatados([]).
 reparados([]).
 
@@ -34,3 +33,4 @@ coincidencias(_, []).
 coincidencias(L, [H|T]) :-
     member(H, L),
     coincidencias(L, T).
+
