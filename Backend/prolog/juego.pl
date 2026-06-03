@@ -6,26 +6,62 @@
 punto_inicio :-
     jugador(Lugar),
     retractall(lugares(_)),
-    assertz(lugares([lugar])),
+    assertz(lugares([Lugar])),
     !.
 punto_inicio.
 
 :- initialization(punto_inicio, now).
 
-% Mostrar lugares del mapa
 
-mostrar_lugares :-
-    modulo(Nombre, Descripcion),
-    write('Lugar: '),
-    write(Nombre),
+modulo_bloqueado(Hacia) :-
+    \+ visita_requerida(Hacia),
     nl,
-    write('Descripcion: '),
-    write(Descripcion),
-    nl,
+    write("El modulo no esta a tu alcance, explora otros modulos antes."),
     nl,
     fail.
 
-mostrar_lugares.
+modulo_bloqueado(Hacia) :-
+    necesita(Hacia, Objeto),
+    usado(Usados),
+    \+ member(Objeto, Usados),
+    nl,
+    write("El modulo "),
+    write(Hacia),
+    write(" esta bloqueado."),
+    nl,
+    write("Tal vez tener un "),
+    write(Objeto),
+    write(" seria util."),
+    nl,
+    fail.
+
+modulo_bloqueado(Hacia) :-
+    necesitaEstado(Hacia, Servicio, _),
+    reparados(Registro),
+    \+ member(Servicio, Registro), 
+    nl,
+    write("Al revisar el estado de "),
+    write(Servicio),
+    write(" te das cuenta que el"),
+    nl,
+    write("modulo esta bloqueado por danos en el sistema."),
+    nl,
+    fail.
+
+modulo_bloqueado(_).
+
+validar_estados_sistemas(Lugar) :-
+    (
+        necesitaEstado(Lugar, Servicio, EstadoNecesario)
+        ->
+        (
+            reparados(Registro),
+            sistema(_, Servicio, _, EstadoNecesario),
+            member(Servicio, Registro)
+        )
+        ;
+        true
+    ).
 
 % Mostrar lugares bloqueados en el mapa
 
@@ -178,6 +214,7 @@ rescatar(Nombre) :-
 % Restriccion: Los sistemas requeridos por necesitaEstado deben estar restaurados.
 
 puedo_ir(Hacia) :-
+    modulo_bloqueado(Hacia),
     jugador(Actual),
     conexion(Actual, Hacia),
     visita_requerida(Hacia),
@@ -185,23 +222,23 @@ puedo_ir(Hacia) :-
         necesita(Hacia, Objeto)
         -> (usado(Usados), member(Objeto, Usados)) ; true
     ),
-    (
-        necesitaEstado(Hacia, Servicio, EstadoNecesario)
-        ->
-        (
-            reparados(Registro),
-            sistema(_, Servicio, _, EstadoNecesario),
-            member(Servicio, Registro)
-        ) 
-        ; true
-    ),
+    validar_estados_sistemas(Hacia),
     write('Puedes avanzar hacia '),
     write(Hacia),
+    write("."),
+    nl.
+
+puedo_ir(Hacia) :-
+    jugador(Hacia),
+    write("Ya estas en "),
+    write(Hacia),
+    write("."),
     nl.
 
 puedo_ir(Hacia) :-
     write('No puedes avanzar hacia '),
     write(Hacia),
+    write("."),
     nl,
     fail.
 
@@ -214,6 +251,7 @@ puedo_ir(Hacia) :-
 
 mover(Lugar) :-
     jugador(Actual),
+    modulo_bloqueado(Lugar),
     conexion(Actual, Lugar),
     visita_requerida(Lugar),
     (
@@ -227,17 +265,7 @@ mover(Lugar) :-
         ;
         true
     ),
-    (
-        necesitaEstado(Lugar, Servicio, EstadoNecesario)
-        ->
-        (
-            reparados(Registro),
-            sistema(_, Servicio, _, EstadoNecesario),
-            member(Servicio, Registro)
-        )
-        ;
-        true
-    ),
+    validar_estados_sistemas(Lugar),
     retractall(jugador(_)),
     assertz(jugador(Lugar)),
     lugares(LugaresVisitados),
@@ -254,6 +282,7 @@ mover(Lugar) :-
     write('Te moviste hacia '),
     write(Lugar),
     nl.
+
 
 mover(Lugar) :-
     write('El camino hacia '),
@@ -317,6 +346,10 @@ modulos_visitados :-
 ruta(Inicio, Fin, Camino) :-
     subRutas(Inicio, Fin, [Inicio], Camino).
 
+ruta(_ ,_ ,_ ) :- 
+    write("No se ha podido reconocer una ruta entre los modulos ingresados."), 
+    nl.
+
 subRutas(Fin, Fin, Camino, Camino).
 
 subRutas(Inicio, Fin, Visitados, Camino) :-
@@ -324,6 +357,7 @@ subRutas(Inicio, Fin, Visitados, Camino) :-
     \+ member(Siguiente, Visitados),
     append(Visitados, [Siguiente], NuevosVisitados),
     subRutas(Siguiente, Fin, NuevosVisitados, Camino).
+
 
 /**************
  *  como_gano  *
